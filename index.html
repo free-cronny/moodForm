@@ -13,7 +13,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            flex-direction: column;
         }
 
         h1 {
@@ -22,12 +22,12 @@
         }
 
         form {
-            max-width: 400px;
-            width: 100%;
+            
             background-color: #ffffff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
 
         label {
@@ -35,7 +35,6 @@
             margin-bottom: 8px;
             color: #ea9088;
         }
-        
 
         input,
         textarea {
@@ -63,15 +62,36 @@
 
         p {
             color: #ea9088;
+            margin-bottom: 20px;
+        }
+
+        .mensagens {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .mensagem {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .mensagem h2 {
+            color: #ea9088;
+        }
+
+        .mensagem p {
+            color: #333;
         }
     </style>
 </head>
 <body>
 
-
     <form id="meuFormulario">
         <h1>Formulário de Envio</h1>
-        <p>Envie uma mensagem de aniversário para a Nana que irá acontecer dia 30/11 s2 </p>
+        <p>Envie uma mensagem de aniversário para a Nana que irá acontecer dia 30/11 s2</p>
         <label for="name">Nome:</label>
         <input type="text" id="name" name="name" required>
 
@@ -81,7 +101,48 @@
         <button type="button" onclick="enviarDados()">Enviar</button>
     </form>
 
+    <h1 style="color: #fff;">Felicitações </h1>
+    <div class="mensagens" id="mensagens">
+        <!-- As mensagens serão exibidas aqui -->
+    </div>
+
     <script>
+        // Função para carregar e exibir mensagens do Firebase
+        function carregarMensagens() {
+            const url = 'https://crud-bbc51-default-rtdb.firebaseio.com/pessoas.json';
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const mensagensDiv = document.getElementById('mensagens');
+                    mensagensDiv.innerHTML = '';
+
+                    for (const key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            const mensagem = data[key];
+                            const mensagemDiv = document.createElement('div');
+                            mensagemDiv.classList.add('mensagem');
+
+                            const nome = mensagem.name || 'Anônimo';
+                            const descricao = mensagem.description || 'Sem descrição';
+
+                            mensagemDiv.innerHTML = `
+                                <h2>${nome}</h2>
+                                <p>${descricao}</p>
+                            `;
+
+                            mensagensDiv.appendChild(mensagemDiv);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar mensagens:', error);
+                });
+        }
+
+        // Chamando a função para carregar mensagens ao carregar a página
+        carregarMensagens();
+
         function enviarDados() {
             // Verificar se o cookie já existe no localStorage
             if (localStorage.getItem('formSubmited')) {
@@ -93,24 +154,40 @@
             const formData = new FormData(formulario);
             const url = 'https://crud-bbc51-default-rtdb.firebaseio.com/pessoas.json';
 
-            fetch(url, {
-                method: 'POST',
-                body: JSON.stringify(Object.fromEntries(formData)),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
+            // Obter a última ID do Firebase
+            fetch(url)
             .then(response => response.json())
             .then(data => {
-                console.log('Dados enviados com sucesso:', data);
-                
-                // Criar cookie indicando que o formulário foi enviado
-                localStorage.setItem('formSubmited', 'true');
-                alert('Agradeço sua felicitação <3!');
-                // Adicione aqui lógica adicional, se necessário
+                // Obter o último ID ou definir como 0 se não houver dados
+                const lastId = Object.keys(data).length > 0 ? Math.max(...Object.keys(data).map(key => parseInt(key) || 0)) : 0;
+
+                // Definir a próxima ID nos dados do formulário
+                formData.set('id', (lastId + 1).toString());
+
+                // Enviar dados para o Firebase
+                fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify(Object.fromEntries(formData)),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Dados enviados com sucesso:', data);
+
+                    // Criar cookie indicando que o formulário foi enviado
+                    localStorage.setItem('formSubmited', 'true');
+                    alert('Agradeço sua felicitação <3!');
+                    // Recarregar mensagens após enviar uma nova
+                    carregarMensagens();
+                })
+                .catch(error => {
+                    console.error('Erro ao enviar dados:', error);
+                });
             })
             .catch(error => {
-                console.error('Erro ao enviar dados:', error);
+                console.error('Erro ao obter última ID:', error);
             });
         }
     </script>

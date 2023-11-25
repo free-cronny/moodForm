@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário de Envio</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #ea9088;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ea9088;
+        }
+
+        form {
+            max-width: 400px;
+            width: 100%;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ea9088;
+        }
+        
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            border: 1px solid #ea9088;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #ea9088;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            color: #ea9088;
+            background-color: #fff;
+        }
+
+        p {
+            color: #ea9088;
+        }
+    </style>
+</head>
+<body>
+
+
+    <form id="meuFormulario">
+        <h1>Formulário de Envio</h1>
+        <p>Envie uma mensagem de aniversário para a Nana que irá acontecer dia 30/11 s2 </p>
+        <label for="name">Nome:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="description">Descrição:</label>
+        <textarea id="description" name="description" required></textarea>
+
+        <button type="button" onclick="enviarDados()">Enviar</button>
+    </form>
+
+    <script>
+        function enviarDados() {
+            // Verificar se o cookie já existe no localStorage
+            if (localStorage.getItem('formSubmited')) {
+                alert('Você já enviou uma mensagem! Aguarde até o próximo aniversário.');
+                return;
+            }
+
+            const formulario = document.getElementById('meuFormulario');
+            const formData = new FormData(formulario);
+            const url = 'https://crud-bbc51-default-rtdb.firebaseio.com/pessoas.json';
+
+            fetch(url, {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Dados enviados com sucesso:', data);
+                
+                // Criar cookie indicando que o formulário foi enviado
+                localStorage.setItem('formSubmited', 'true');
+                alert('Agradeço sua felicitação <3!');
+                // Adicione aqui lógica adicional, se necessário
+            })
+            .catch(error => {
+                console.error('Erro ao enviar dados:', error);
+            });
+        }
+    </script>
+
+</body>
+</html>
